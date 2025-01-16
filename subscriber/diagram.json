@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "author": "Anonymous maker",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "board-esp32-devkit-c-v4",
+      "id": "esp",
+      "top": -9.6,
+      "left": -206.36,
+      "attrs": { "env": "micropython-20231227-v1.22.0" }
+    },
+    { "type": "wokwi-relay-module", "id": "relay1", "top": 0.2, "left": 9.6, "attrs": {} },
+    {
+      "type": "wokwi-vcc",
+      "id": "vcc1",
+      "top": 181.44,
+      "left": -47.8,
+      "rotate": 180,
+      "attrs": {}
+    },
+    { "type": "wokwi-gnd", "id": "gnd1", "top": 172.8, "left": -10.2, "attrs": {} }
+  ],
+  "connections": [
+    [ "esp:TX", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX", "$serialMonitor:TX", "", [] ],
+    [ "relay1:VCC", "vcc1:VCC", "red", [ "h0" ] ],
+    [ "relay1:GND", "gnd1:GND", "black", [ "h0" ] ],
+    [ "relay1:IN", "esp:5", "green", [ "h0" ] ]
+  ],
+  "dependencies": {}
+}
