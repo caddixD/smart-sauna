@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IPS - Valdymas</title>
+  <!-- Bootstrap 5 CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      background-color: #f8f9fa;
+      font-family: 'Roboto', sans-serif;
+      color: #333;
+    }
+
+    .dashboard-container {
+      margin-top: 50px;
+      background-color: #ffffff;
+      padding: 40px;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      max-width: 1200px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    h2 {
+      font-size: 2rem;
+      text-align: center;
+      color: #6c757d;
+      margin-bottom: 30px;  /* Pridėtas atstumas nuo kortelių */
+    }
+
+    .status-card {
+      background-color: #f1f3f5;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+    }
+
+    .status-card h4 {
+      font-size: 1.2rem;
+      margin-bottom: 10px;
+      color: #495057;
+    }
+
+    .status-card .value {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #007bff;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 0.9rem;
+      color: #6c757d;
+    }
+
+    .footer a {
+      color: #007bff;
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
+    canvas {
+      max-width: 100%;
+      height: 400px;
+    }
+
+    .row .col {
+      margin-bottom: 20px;
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="dashboard-container">
+    <!-- Pavadinimas perkeliamas virš kortelių -->
+    <h2>Pirties duomenys</h2>
+
+    <!-- Pirma eilutė: Temperatūra, Drėgmė ir Krosnies būklė -->
+    <div class="row">
+      <!-- Temperatūros rodymas -->
+      <div class="col-md-4 col-lg-4">
+        <div class="status-card">
+          <h4>Temperatūra</h4>
+          <p id="temperature" class="value">Kraunama...</p>
+        </div>
+      </div>
+
+      <!-- Drėgmės rodymas -->
+      <div class="col-md-4 col-lg-4">
+        <div class="status-card">
+          <h4>Drėgmė</h4>
+          <p id="humidity" class="value">Kraunama...</p>
+        </div>
+      </div>
+
+      <!-- Krosnies būklės rodymas -->
+      <div class="col-md-4 col-lg-4">
+        <div class="status-card">
+          <h4>Krosnies būsena</h4>
+          <p id="ovenStatus" class="value">Kraunama...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Antra eilutė: Temperatūros ir Drėgmės grafikai -->
+    <div class="row">
+      <!-- Temperatūros grafikas -->
+      <div class="col-md-6 col-lg-6">
+        <div class="status-card">
+          <h4>Temperatūros pokyčiai</h4>
+          <canvas id="temperatureChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Drėgmės grafikas -->
+      <div class="col-md-6 col-lg-6">
+        <div class="status-card">
+          <h4>Drėgmės pokyčiai</h4>
+          <canvas id="humidityChart"></canvas>
+        </div>
+      </div>
+
+      <div class="switch-container d-flex justify-content-center gap-4 mt-4">
+        <label class="switch">
+          <input type="checkbox" id="manualModeButton" name="choice" value="Option 1">
+          <span class="slider"></span>
+          <span class="label-text">Rankinis režimas</span>
+        </label>
+      
+        <label class="switch">
+          <input type="checkbox" id="option2" name="choice" value="Option 2">
+          <span class="slider"></span>
+          <span class="label-text">Turkiška pirtis</span>
+        </label>
+      
+        <label class="switch">
+          <input type="checkbox" id="option3" name="choice" value="Option 3">
+          <span class="slider"></span>
+          <span class="label-text">Rusiška pirtis</span>
+        </label>
+      
+        <label class="switch">
+          <input type="checkbox" id="option4" name="choice" value="Option 4">
+          <span class="slider"></span>
+          <span class="label-text">Suomiška pirtis</span>
+        </label>
+      </div>
+
+    <div class="footer">
+      <small>© 2024 Išmaniosios pirties sistema</small>
+    </div>
+  </div>
+
+
+  <div class="modal fade" id="manualModeModal" tabindex="-1" aria-labelledby="manualModeModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="manualModeModalLabel">Rankinis režimas</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="manualTemperature" class="form-label">Temperatūra (°C)</label>
+            <input type="number" class="form-control" id="manualTemperature" placeholder="Įveskite temperatūrą">
+          </div>
+          <div class="mb-3">
+            <label for="manualHumidity" class="form-label">Drėgmė (%)</label>
+            <input type="number" class="form-control" id="manualHumidity" placeholder="Įveskite drėgmę">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Atšaukti</button>
+          <button type="button" class="btn btn-primary" id="saveManualValues">Išsaugoti</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
+
+<script>
+
+let modalOpened = false;
+
+    document.querySelectorAll('.switch input').forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+      if (this.checked) {
+        document.querySelectorAll('.switch input').forEach(input => {
+          if (input !== this) {
+            input.checked = false; 
+          }
+        });
+      }
+    });
+  });
+
+  document.getElementById('manualModeButton').addEventListener('click', function() {
+    if (this.checked && !modalOpened) {
+      const modal = new bootstrap.Modal(document.getElementById('manualModeModal'));
+      modal.show();
+      modalOpened = true;
+    } else if (!this.checked) {
+      modalOpened = false;
+    }
+  });
+
+  document.getElementById('saveManualValues').addEventListener('click', () => {
+    const temperature = document.getElementById('manualTemperature').value;
+    const humidity = document.getElementById('manualHumidity').value;
+
+    if (temperature && humidity) {
+      fetch('/publishManualData', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          temperature,
+          humidity
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        //alert('Duomenys išsiųsti į Adafruit!');
+        bootstrap.Modal.getInstance(document.getElementById('manualModeModal')).hide();
+      })
+      .catch(error => {
+        //alert('Klaida siunčiant duomenis į Adafruit');
+        console.error(error);
+      });
+    } else {
+     //alert('Įveskite tiek temperatūrą, tiek drėgmę!');
+    }
+  });
+</script>
+
+<script>
+document.querySelectorAll('.switch input').forEach(checkbox => {
+  checkbox.addEventListener('change', function() {
+    if (this.checked) {
+      document.querySelectorAll('.switch input').forEach(input => {
+        if (input !== this) {
+          input.checked = false; 
+        }
+      });
+      
+      // Gauti pasirinktą pirtį
+      let bathType = '';
+      let temperature = 0;
+      let humidity = 0;
+
+      // Patikriname, kuris variantas yra pažymėtas
+      if (document.getElementById('option2').checked) {
+        bathType = 'Turkiška pirtis';
+        temperature = 60;
+        humidity = 60;
+      }
+      if (document.getElementById('option3').checked) {
+        bathType = 'Rusiška pirtis';
+        temperature = 90;
+        humidity = 60;
+      }
+      if (document.getElementById('option4').checked) {
+        bathType = 'Suomiška pirtis';
+        temperature = 100;
+        humidity = 20;
+      }
+
+      // Siųsti duomenis į serverį, jei pirtis yra pasirinkta
+      if (bathType) {
+        fetch('/setBath', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            bathType,
+            temperature,
+            humidity
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          alert(`${bathType} duomenys išsiųsti į Adafruit!`);
+        })
+        .catch(error => {
+          console.error(error);
+          //alert('Klaida siunčiant duomenis į Adafruit');
+        });
+      } else {
+        //alert('Pasirinkite pirtį!');
+      }
+    }
+  });
+});
+
+</script>
+
+  <script>
+    let temperatureData = [];
+    let humidityData = [];
+    let timestamps = [];
+    let ovenStatus = 'Išjungta';
+
+    // Inicializuoti Chart.js grafikus
+    const ctxTemperature = document.getElementById('temperatureChart').getContext('2d');
+    const ctxHumidity = document.getElementById('humidityChart').getContext('2d');
+
+    const temperatureChart = new Chart(ctxTemperature, {
+      type: 'line',
+      data: {
+        labels: timestamps,
+        datasets: [{
+          label: 'Temperatūra (°C)',
+          data: temperatureData,
+          borderColor: 'rgba(255, 99, 132, 1)',
+          backgroundColor: 'rgba(255, 99, 132, 0.2)',
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          x: { title: { display: true, text: 'Laikas' }},
+          y: { title: { display: true, text: 'Temperatūra (°C)' }}
+        }
+      }
+    });
+
+    const humidityChart = new Chart(ctxHumidity, {
+      type: 'line',
+      data: {
+        labels: timestamps,
+        datasets: [{
+          label: 'Drėgmė (%)',
+          data: humidityData,
+          borderColor: 'rgba(54, 162, 235, 1)',
+          backgroundColor: 'rgba(54, 162, 235, 0.2)',
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          x: { title: { display: true, text: 'Laikas' }},
+          y: { title: { display: true, text: 'Drėgmė (%)' }}
+        }
+      }
+    });
+
+    // Funkcija, kuri gauna duomenis ir atnaujina rodymą ir grafikus
+    function updateData() {
+      fetch('/temperature')
+        .then(response => response.json())
+        .then(data => {
+          const temperature = data.temperature;
+          document.getElementById('temperature').textContent = temperature !== undefined ? `${temperature}°C` : 'Nėra duomenų';
+          if (temperature !== undefined) {
+            temperatureData.push(temperature);
+            timestamps.push(new Date().toLocaleTimeString());
+            temperatureChart.update();
+          }
+        })
+        .catch(() => {
+          document.getElementById('temperature').textContent = 'Nėra duomenų';
+        });
+
+          // Užklausos paskutinius duomenis iš serverio
+  fetch('/getLastData')
+    .then(response => response.json())
+    .then(data => {
+      const temperature = data.temperature;
+      const humidity = data.humidity;
+      const ovenStatus = data.ovenStatus;
+
+      // Atnaujina temperatūros ir drėgmės rodymus
+      document.getElementById('temperature').textContent = temperature !== undefined ? `${temperature}°C` : 'Nėra duomenų';
+      document.getElementById('humidity').textContent = humidity !== undefined ? `${humidity}%` : 'Nėra duomenų';
+      //document.getElementById('ovenStatus').textContent = ovenStatus !== undefined ? ovenStatus : 'Nėra duomenų';
+
+      // Atnaujina grafikus su paskutiniais duomenimis
+      if (temperature !== undefined) {
+        temperatureData.push(temperature);
+        timestamps.push(new Date().toLocaleTimeString());
+        temperatureChart.update();
+      }
+
+      if (humidity !== undefined) {
+        humidityData.push(humidity);
+        humidityChart.update();
+      }
+    })
+    .catch(() => {
+      document.getElementById('temperature').textContent = 'Nėra duomenų';
+      document.getElementById('humidity').textContent = 'Nėra duomenų';
+      //document.getElementById('ovenStatus').textContent = 'Nėra duomenų';
+    });
+
+
+      fetch('/humidity')
+        .then(response => response.json())
+        .then(data => {
+          const humidity = data.humidity;
+          document.getElementById('humidity').textContent = humidity !== undefined ? `${humidity}%` : 'Nėra duomenų';
+          if (humidity !== undefined) {
+            humidityData.push(humidity);
+            humidityChart.update();
+          }
+        })
+        .catch(() => {
+          document.getElementById('humidity').textContent = 'Nėra duomenų';
+        });
+        
+        // Krosnies būklės atnaujinimas pagal heater_status
+        fetch('/heater_status')
+  .then(response => response.json())
+  .then(data => {
+    console.log(data);
+    const ovenStatus = data.heater_status === 'ON' ? 'Įjungta' : 'Išjungta';
+    document.getElementById('ovenStatus').textContent = ovenStatus;
+  })
+  .catch(error => {
+    console.error(error);
+    document.getElementById('ovenStatus').textContent = 'Nėra duomenų';
+  });
+
+
+}
+
+    setInterval(updateData, 5000); // Atnaujina kas 5 sekundes
+  </script>
+</body>
+</html>
